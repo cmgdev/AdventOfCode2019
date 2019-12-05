@@ -23,6 +23,7 @@ public class Puzzle extends AbstractPuzzle {
       List<String> input = puzzle.readFile();
 
       solve1( input );
+      solve2( input );
    }
 
    public static void solve1( List<String> input ) {
@@ -35,11 +36,28 @@ public class Puzzle extends AbstractPuzzle {
       int shortestDistance = pointMap.getManhattanDistance( closestMultiOccupiedPoint );
       System.out.println( "Shortest distance is " + shortestDistance );
       if ( IS_TEST ) {
-         System.out.println( pointMap );
-         System.out.println( shortestDistance == 159 );
+//         System.out.println( pointMap );
+         System.out.println( shortestDistance == 6 );
       }
       else {
          System.out.println( shortestDistance == 1084 );
+      }
+   }
+
+   public static void solve2( List<String> input ) {
+      System.out.println( "Solving 2..." );
+
+      PointMap pointMap = new PointMap();
+      pointMap.occupyPoints( input );
+
+      int shortestDistance = pointMap.getShortestDistanceToMultiOccupiedPoint();
+      System.out.println( "Shortest distance is " + shortestDistance );
+      if ( IS_TEST ) {
+//         System.out.println( pointMap );
+         System.out.println( shortestDistance == 410 );
+      }
+      else {
+         System.out.println( shortestDistance == 9240 );
       }
    }
 
@@ -47,7 +65,7 @@ public class Puzzle extends AbstractPuzzle {
 
       private static final String keySep = ",";
 
-      Map<String, Set<Integer>> points = new HashMap<>();
+      Map<String, Set<Occupant>> points = new HashMap<>();
 
       public void occupyPoints( List<String> inputs ) {
          int lineNumber = 0;
@@ -56,6 +74,7 @@ public class Puzzle extends AbstractPuzzle {
 
             int startX = 0;
             int startY = 0;
+            int encounterOrder = 0;
 
             for ( int i = 0; i < directions.length; i++ ) {
                String instruction = directions[i];
@@ -65,28 +84,28 @@ public class Puzzle extends AbstractPuzzle {
                if ( direction == 'R' ) {
                   int endX = startX + length;
                   for ( int j = startX; j < endX; j++ ) {
-                     occupyPoint( j, startY, lineNumber );
+                     occupyPoint( j, startY, lineNumber, encounterOrder++ );
                   }
                   startX = endX;
                }
                else if ( direction == 'L' ) {
                   int endX = startX - length;
                   for ( int j = startX; j > endX; j-- ) {
-                     occupyPoint( j, startY, lineNumber );
+                     occupyPoint( j, startY, lineNumber, encounterOrder++ );
                   }
                   startX = endX;
                }
                else if ( direction == 'U' ) {
                   int endY = startY + length;
                   for ( int j = startY; j < endY; j++ ) {
-                     occupyPoint( startX, j, lineNumber );
+                     occupyPoint( startX, j, lineNumber, encounterOrder++ );
                   }
                   startY = endY;
                }
                else if ( direction == 'D' ) {
                   int endY = startY - length;
                   for ( int j = startY; j > endY; j-- ) {
-                     occupyPoint( startX, j, lineNumber );
+                     occupyPoint( startX, j, lineNumber, encounterOrder++ );
                   }
                   startY = endY;
                }
@@ -99,8 +118,7 @@ public class Puzzle extends AbstractPuzzle {
          int closest = 9999999;
          String closestPoint = "";
 
-         List<String> multiOccupiedPoints = getMultiOccupiedPoints();
-         for ( String point : multiOccupiedPoints ) {
+         for ( String point : getMultiOccupiedPoints() ) {
             int distance = getManhattanDistance( point );
             if ( distance > 0 && distance < closest ) {
                closest = distance;
@@ -116,15 +134,29 @@ public class Puzzle extends AbstractPuzzle {
          return Math.abs( Integer.valueOf( l[0] ) ) + Math.abs( Integer.valueOf( l[1] ) );
       }
 
+      public int getShortestDistanceToMultiOccupiedPoint() {
+         int distance = 9999999;
+
+         for ( String point : getMultiOccupiedPoints() ) {
+            Set<Occupant> occupants = points.get( point );
+            int thisDistance = occupants.stream().mapToInt( Occupant::getEncounterOrder ).sum();
+            if ( thisDistance > 0 && thisDistance < distance ) {
+               distance = thisDistance;
+            }
+         }
+         return distance;
+      }
+
       private List<String> getMultiOccupiedPoints() {
-         return points.entrySet().stream().filter( e -> e.getValue().size() > 1 ).map( Map.Entry::getKey )
+         return points.entrySet().stream().filter( e -> e.getValue().size() > 1 )
+               .filter( e -> !e.getKey().equals( getPointKey( 0, 0 ) ) ).map( Map.Entry::getKey )
                .collect( Collectors.toList() );
       }
 
-      private void occupyPoint( int x, int y, int lineNumber ) {
+      private void occupyPoint( int x, int y, int lineNumber, int encounterOrder ) {
          String key = getPointKey( x, y );
-         Set<Integer> occupants = points.getOrDefault( key, new HashSet<>() );
-         occupants.add( lineNumber );
+         Set<Occupant> occupants = points.getOrDefault( key, new HashSet<>() );
+         occupants.add( new Occupant( lineNumber, encounterOrder ) );
          points.put( key, occupants );
       }
 
@@ -179,6 +211,36 @@ public class Puzzle extends AbstractPuzzle {
          corners.put( "MAX_Y", maxY );
 
          return corners;
+      }
+   }
+
+   public static class Occupant {
+
+      int occupantId;
+      int encounterOrder;
+
+      public Occupant( int occupantId, int encounterOrder ) {
+         this.occupantId = occupantId;
+         this.encounterOrder = encounterOrder;
+      }
+
+      public int getEncounterOrder() {
+         return encounterOrder;
+      }
+
+      @Override
+      public String toString() {
+         return occupantId + ":" + encounterOrder;
+      }
+
+      @Override
+      public boolean equals( Object obj ) {
+         return this.occupantId == ((Occupant) obj).occupantId;
+      }
+
+      @Override
+      public int hashCode() {
+         return occupantId;
       }
    }
 
