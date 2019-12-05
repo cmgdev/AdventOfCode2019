@@ -4,6 +4,7 @@ import java.io.File;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public abstract class AbstractPuzzle {
    public static final String ALPHABET_UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -27,6 +28,7 @@ public abstract class AbstractPuzzle {
 
       try {
          input = Files.readAllLines(new File(inputFile).toPath());
+         return input.stream().filter( i -> !i.startsWith( "#" ) && !i.isEmpty() ).collect( Collectors.toList() );
       } catch (Exception e) {
          System.out.println("Oh shit! " + e);
       }
