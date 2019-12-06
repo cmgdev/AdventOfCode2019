@@ -71,6 +71,10 @@ public class Puzzle extends AbstractPuzzle {
          current = current + inc;
       }
 
+      private void jump( int position ) {
+         current = position;
+      }
+
       public int getPosition0() {
          return program.get( 0 );
       }
@@ -88,15 +92,11 @@ public class Puzzle extends AbstractPuzzle {
 
       private int doOp( int input ) {
          int opCode = getOpCode();
-         int firstParamMode = getParamMode( 1 );
-         int secondParamMode = getParamMode( 2 );
-         int thirdParamMode = getParamMode( 3 );
-
-         int firstPosition = getPositionNumber( 1, firstParamMode );
+         int firstPosition = getPositionNumber( 1 );
 
          if ( opCode == 1 || opCode == 2 ) {
-            int secondPosition = getPositionNumber( 2, secondParamMode );
-            int thirdPosition = getPositionNumber( 3, thirdParamMode );
+            int secondPosition = getPositionNumber( 2 );
+            int thirdPosition = getPositionNumber( 3 );
 
             if ( opCode == 1 ) {
                program.set( thirdPosition, getValue( firstPosition ) + getValue( secondPosition ) );
@@ -130,21 +130,16 @@ public class Puzzle extends AbstractPuzzle {
 
       private int getParamMode( int paramNumber ) {
          int fullInstruction = program.get( getCurrent() );
-         if ( paramNumber == 3 ) {
-            return fullInstruction / 10000;
-         }
-         else if ( paramNumber == 2 ) {
-            return (fullInstruction / 1000) % 10;
-         }
-         else if ( paramNumber == 1 ) {
-            return (fullInstruction / 100) % 10;
+         if ( paramNumber >= 1 && paramNumber <= 3 ) {
+            return (int) ((fullInstruction / Math.pow( 10, (paramNumber + 1) )) % 10);
          }
          else {
             throw new RuntimeException( "invalid param mode " + fullInstruction + " param number " + paramNumber );
          }
       }
 
-      private int getPositionNumber( int paramNumber, int paramMode ) {
+      private int getPositionNumber( int paramNumber ) {
+         int paramMode = getParamMode( paramNumber );
          if ( paramMode == 0 ) {
             return program.get( getCurrent() + paramNumber );
          }
