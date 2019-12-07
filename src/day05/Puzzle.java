@@ -10,6 +10,15 @@ public class Puzzle extends AbstractPuzzle {
    public static final boolean IS_TEST = false;
    public static final int DAY = 5;
 
+   public static final int OP_ADD = 1;
+   public static final int OP_MULTIPLY = 2;
+   public static final int OP_WRITE = 3;
+   public static final int OP_READ = 4;
+   public static final int OP_JUMP_IF_TRUE = 5;
+   public static final int OP_JUMP_IF_FALSE = 6;
+   public static final int OP_LESS_THAN = 7;
+   public static final int OP_EQUALS = 8;
+
    public Puzzle() {
       super( IS_TEST, DAY );
    }
@@ -37,8 +46,24 @@ public class Puzzle extends AbstractPuzzle {
       }
    }
 
-   public static void solve2( List<String> input ) {
+   public static void solve2( List<String> instructions ) {
       System.out.println( "Solving 2..." );
+
+      if( IS_TEST ) {
+         Intcode intcode = new Intcode( "3,3,1105,-1,9,1101,0,0,12,4,12,99,1" );
+         int input = 0;
+         int result = intcode.runProgram( input );
+
+         System.out.println( "Result is " + result );
+      }
+      else {
+         Intcode intcode = new Intcode( instructions.get( 0 ) );
+         int input = 5;
+         int result = intcode.runProgram( input );
+
+         System.out.println( "Result is " + result );
+         System.out.println( 3419022 == result );
+      }
    }
 
    public static class Intcode {
@@ -68,7 +93,7 @@ public class Puzzle extends AbstractPuzzle {
       }
 
       private void next( int inc ) {
-         current = current + inc;
+         current += inc;
       }
 
       private void jump( int position ) {
@@ -94,29 +119,56 @@ public class Puzzle extends AbstractPuzzle {
          int opCode = getOpCode();
          int firstPosition = getPositionNumber( 1 );
 
-         if ( opCode == 1 || opCode == 2 ) {
+         if ( opCode == OP_ADD || opCode == OP_MULTIPLY || opCode == OP_LESS_THAN || opCode == OP_EQUALS ) {
             int secondPosition = getPositionNumber( 2 );
             int thirdPosition = getPositionNumber( 3 );
 
-            if ( opCode == 1 ) {
+            if ( opCode == OP_ADD ) {
                program.set( thirdPosition, getValue( firstPosition ) + getValue( secondPosition ) );
             }
-            else if ( opCode == 2 ) {
+
+            else if ( opCode == OP_MULTIPLY ) {
                program.set( thirdPosition, getValue( firstPosition ) * getValue( secondPosition ) );
             }
+
+            else if( opCode == OP_LESS_THAN ) {
+               int lessThan = getValue( firstPosition ) < getValue( secondPosition ) ? 1 : 0;
+               program.set( thirdPosition, lessThan );
+            }
+
+            else if( opCode == OP_EQUALS ) {
+               int equals = getValue( firstPosition ) == getValue( secondPosition ) ? 1 : 0;
+               program.set( thirdPosition, equals );
+            }
+
             next( 4 );
             return 0;
          }
-         else if ( opCode == 3 || opCode == 4 ) {
+         else if ( opCode == OP_WRITE || opCode == OP_READ ) {
             int result = 0;
-            if ( opCode == 3 ) {
+
+            if ( opCode == OP_WRITE ) {
                program.set( firstPosition, input );
             }
-            else if ( opCode == 4 ) {
+
+            else if ( opCode == OP_READ ) {
                result = program.get( firstPosition );
             }
             next( 2 );
             return result;
+         }
+         else if ( opCode == OP_JUMP_IF_TRUE || opCode == OP_JUMP_IF_FALSE ) {
+            int firstVal = getValue( firstPosition );
+            int secondPosition = getPositionNumber( 2 );
+
+            if ( (opCode == OP_JUMP_IF_TRUE && firstVal != 0) || (opCode == OP_JUMP_IF_FALSE && firstVal == 0) ) {
+               jump( getValue( secondPosition ) );
+            }
+
+            else {
+               next( 3 );
+            }
+            return 0;
          }
          else {
             throw new RuntimeException( "invalid opCode " + opCode + " at position " + getCurrent() );
