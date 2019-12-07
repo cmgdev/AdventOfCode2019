@@ -33,7 +33,8 @@ public class Puzzle extends AbstractPuzzle {
       System.out.println( "Total orbits " + orbitCount );
       if ( IS_TEST ) {
          System.out.println( orbits );
-         System.out.println( 42 == orbitCount );
+         //System.out.println( 42 == orbitCount );
+         System.out.println( 54 == orbitCount ); // 42 + YOU + SAN
       }
       else {
          System.out.println( 204521 == orbitCount );
@@ -46,6 +47,17 @@ public class Puzzle extends AbstractPuzzle {
       Puzzle puzzle = new Puzzle();
       List<String> input = puzzle.readFile();
 
+      Map<String, Orbiter> orbits = getOrbits( input );
+
+      int distance = getDistanceFromYOUToSAN( orbits );
+
+      System.out.println( "Distance is " + distance );
+      if ( IS_TEST ) {
+         System.out.println( 4 == distance );
+      }
+      else {
+         System.out.println( 307 == distance );
+      }
    }
 
    public static Map<String, Orbiter> getOrbits( List<String> input ) {
@@ -87,6 +99,39 @@ public class Puzzle extends AbstractPuzzle {
       }
 
       return 0;
+   }
+
+   private static List<String> getPathToCenter( String startOrbiterId, Map<String, Orbiter> orbits ) {
+      List<String> path = new ArrayList<>();
+      path.add( startOrbiterId );
+
+      Orbiter thisOrbiter = orbits.get( startOrbiterId );
+      Orbiter center = orbits.get( thisOrbiter.centerId );
+
+      while ( center != null ) {
+         path.add( center.id );
+         center = orbits.get( center.centerId );
+      }
+      return path;
+   }
+
+   private static int getDistanceFromYOUToSAN( Map<String, Orbiter> orbits ) {
+      List<String> pathFromYOUToCOM = getPathToCenter( "YOU", orbits );
+      //      System.out.println( pathFromYOUToCOM );
+      List<String> pathFromSANToCOM = getPathToCenter( "SAN", orbits );
+      //      System.out.println( pathFromSANToCOM );
+
+      String firstCommon = getFirstCommonBody( pathFromYOUToCOM, pathFromSANToCOM );
+      return pathFromYOUToCOM.indexOf( firstCommon ) + pathFromSANToCOM.indexOf( firstCommon ) - 2;
+   }
+
+   private static String getFirstCommonBody( List<String> pathFromAToCOM, List<String> pathFromBToCOM ) {
+      for ( String id : pathFromAToCOM ) {
+         if ( pathFromBToCOM.contains( id ) ) {
+            return id;
+         }
+      }
+      return null;
    }
 
    public static class Orbiter {
