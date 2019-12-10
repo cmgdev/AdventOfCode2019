@@ -7,11 +7,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 public class Puzzle extends AbstractPuzzle {
 
-   public static final boolean IS_TEST = true;
+   public static final boolean IS_TEST = false;
    public static final int DAY = 7;
 
    public Puzzle() {
@@ -19,8 +20,8 @@ public class Puzzle extends AbstractPuzzle {
    }
 
    public static void main( String[] args ) {
-      solve1();
-//      solve2();
+      //      solve1();
+      solve2();
    }
 
    private static void solve1() {
@@ -39,7 +40,7 @@ public class Puzzle extends AbstractPuzzle {
             amp.addInput( permutation[i]  );
             amp.addInput( prevOutput );
             amp.runProgram();
-            prevOutput = amp.getOutput();
+            prevOutput = amp.getOutput().get();
          }
          if ( prevOutput > highestOutput ) {
             highestOutput = prevOutput;
@@ -57,6 +58,62 @@ public class Puzzle extends AbstractPuzzle {
    }
 
    private static void solve2() {
+      System.out.println( "Solving 2..." );
+      Puzzle puzzle = new Puzzle();
+      String instructions = puzzle.readFile().get( 0 );
+      if ( IS_TEST ) {
+         instructions = "3,26,1001,26,-4,26,3,27,1002,27,2,27,1,27,26,27,4,27,1001,28,-1,28,1005,28,6,99,0,0,5";
+      }
+
+      Set<Integer[]> permutations = getPermutationsRecursive( new Integer[]{ 5, 6, 7, 8, 9 } );
+
+      int highestOutput = 0;
+      Integer[] bestPhases = null;
+      for ( Integer[] permutation : permutations ) {
+         List<Intcode> amps = initAmps( instructions, permutation );
+
+         Intcode.ExitCondition exitCondition = Intcode.ExitCondition.CONTINUE;
+         Optional<Integer> outFromPrevAmp = Optional.empty();
+
+         while ( Intcode.ExitCondition.OK != exitCondition ) {
+            for ( int i = 0; i < 5; i++ ) {
+               Intcode amp = amps.get( i );
+               if ( outFromPrevAmp.isPresent() ) {
+                  amp.addInput( outFromPrevAmp.get() );
+               }
+               exitCondition = amp.runProgram();
+               //               System.out.println( exitCondition + " for " + i );
+
+               outFromPrevAmp = amp.getOutput();
+            }
+         }
+         int prevOutput = amps.get( 4 ).getOutput().get();
+         if ( prevOutput > highestOutput ) {
+            highestOutput = prevOutput;
+            bestPhases = permutation;
+         }
+      }
+      System.out.println( "Highest " + highestOutput );
+      System.out.println( "With Permutation " + Arrays.toString( bestPhases ) );
+      if ( IS_TEST ) {
+         System.out.println( 139629729 == highestOutput );
+      }
+      else {
+         System.out.println( 8754464 == highestOutput );
+      }
+   }
+
+   private static List<Intcode> initAmps( String instructions, Integer[] permutation ) {
+      List<Intcode> amps = new ArrayList<>();
+      for ( int i = 0; i < permutation.length; i++ ) {
+         Intcode intcode = new Intcode( instructions );
+         intcode.addInput( permutation[i] );
+         if ( i == 0 ) {
+            intcode.addInput( 0 );
+         }
+         amps.add( intcode );
+      }
+      return amps;
    }
 
    // copied from https://stackoverflow.com/a/35946398

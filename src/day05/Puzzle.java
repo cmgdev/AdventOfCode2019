@@ -26,7 +26,7 @@ public class Puzzle extends AbstractPuzzle {
       intcode.addInput( 1 );
       intcode.runProgram();
 
-      int result = intcode.getOutput();
+      int result = intcode.getOutput().get();
 
       System.out.println( "Result is " + result );
       if ( IS_TEST ) {
@@ -45,7 +45,7 @@ public class Puzzle extends AbstractPuzzle {
          Intcode intcode = new Intcode( "3,3,1105,-1,9,1101,0,0,12,4,12,99,1" );
          intcode.addInput( 0 );
          intcode.runProgram();
-         int result = intcode.getOutput();
+         int result = intcode.getOutput().get();
 
          System.out.println( "Result is " + result );
       }
@@ -53,7 +53,7 @@ public class Puzzle extends AbstractPuzzle {
          Intcode intcode = new Intcode( instructions.get( 0 ) );
          intcode.addInput( 5 );
          intcode.runProgram();
-         int result = intcode.getOutput();
+         int result = intcode.getOutput().get();
 
          System.out.println( "Result is " + result );
          System.out.println( 3419022 == result );

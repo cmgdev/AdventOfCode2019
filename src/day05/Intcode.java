@@ -2,6 +2,7 @@ package day05;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class Intcode {
 
@@ -9,7 +10,7 @@ public class Intcode {
    private List<Integer> inputs = new ArrayList();
 
    private int current = 0;
-   private int output = 0;
+   private Optional<Integer> output = Optional.empty();
 
    public static final int OP_ADD = 1;
    public static final int OP_MULTIPLY = 2;
@@ -179,11 +180,11 @@ public class Intcode {
       inputs.add( input );
    }
 
-   public int getOutput(){
+   public Optional<Integer> getOutput(){
       return this.output;
    }
 
    private void setOutput( int output ){
-      this.output = output;
+      this.output = Optional.of( output );
    }
 }
