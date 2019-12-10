@@ -7,12 +7,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 public class Puzzle extends AbstractPuzzle {
 
-   public static final boolean IS_TEST = false;
+   public static final boolean IS_TEST = true;
    public static final int DAY = 7;
 
    public Puzzle() {
@@ -21,7 +20,7 @@ public class Puzzle extends AbstractPuzzle {
 
    public static void main( String[] args ) {
       solve1();
-      solve2();
+//      solve2();
    }
 
    private static void solve1() {
@@ -36,12 +35,11 @@ public class Puzzle extends AbstractPuzzle {
       for ( Integer[] permutation : permutations ) {
          int prevOutput = 0;
          for ( int i = 0; i < 5; i++ ) {
-            List<Integer> inputs = new ArrayList<>();
-            inputs.add( 0, permutation[i] );
-            inputs.add( 1, prevOutput );
-
             Intcode amp = new Intcode( instructions );
-            prevOutput = amp.runProgram( inputs );
+            amp.addInput( permutation[i]  );
+            amp.addInput( prevOutput );
+            amp.runProgram();
+            prevOutput = amp.getOutput();
          }
          if ( prevOutput > highestOutput ) {
             highestOutput = prevOutput;

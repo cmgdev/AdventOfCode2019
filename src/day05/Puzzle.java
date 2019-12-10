@@ -23,8 +23,10 @@ public class Puzzle extends AbstractPuzzle {
    public static void solve1( List<String> instructions ) {
       System.out.println( "Solving 1..." );
       Intcode intcode = new Intcode( instructions.get( 0 ) );
-      int input = 1;
-      int result = intcode.runProgram( input );
+      intcode.addInput( 1 );
+      intcode.runProgram();
+
+      int result = intcode.getOutput();
 
       System.out.println( "Result is " + result );
       if ( IS_TEST ) {
@@ -41,15 +43,17 @@ public class Puzzle extends AbstractPuzzle {
 
       if( IS_TEST ) {
          Intcode intcode = new Intcode( "3,3,1105,-1,9,1101,0,0,12,4,12,99,1" );
-         int input = 0;
-         int result = intcode.runProgram( input );
+         intcode.addInput( 0 );
+         intcode.runProgram();
+         int result = intcode.getOutput();
 
          System.out.println( "Result is " + result );
       }
       else {
          Intcode intcode = new Intcode( instructions.get( 0 ) );
-         int input = 5;
-         int result = intcode.runProgram( input );
+         intcode.addInput( 5 );
+         intcode.runProgram();
+         int result = intcode.getOutput();
 
          System.out.println( "Result is " + result );
          System.out.println( 3419022 == result );

@@ -6,7 +6,10 @@ import java.util.List;
 public class Intcode {
 
    private List<Integer> program = new ArrayList();
+   private List<Integer> inputs = new ArrayList();
+
    private int current = 0;
+   private int output = 0;
 
    public static final int OP_ADD = 1;
    public static final int OP_MULTIPLY = 2;
@@ -16,6 +19,12 @@ public class Intcode {
    public static final int OP_JUMP_IF_FALSE = 6;
    public static final int OP_LESS_THAN = 7;
    public static final int OP_EQUALS = 8;
+
+   public enum ExitCondition {
+      OK,
+      CONTINUE,
+      INPUT_NEEDED
+   }
 
    public Intcode( String instructions ) {
       init( instructions );
@@ -50,21 +59,24 @@ public class Intcode {
       return program.get( 0 );
    }
 
-   public int runProgram( int input ) {
-      List<Integer> inputs = new ArrayList<>();
-      inputs.add( input );
-      return runProgram( inputs );
+   public ExitCondition runProgram( int input ) {
+      addInput( input );
+      return runProgram();
    }
 
-   public int runProgram( List<Integer> inputs ) {
-      int result = 0;
-      while ( !shouldStop() ) {
-         result = doOp( inputs );
+   public ExitCondition runProgram() {
+      ExitCondition exitCondition = ExitCondition.CONTINUE;
+      while ( exitCondition == ExitCondition.CONTINUE ) {
+         exitCondition = doOp();
       }
-      return result;
+      return exitCondition;
    }
 
-   private int doOp( List<Integer> inputs ) {
+   private ExitCondition doOp() {
+      if( shouldStop() ) {
+         return ExitCondition.OK;
+      }
+
       int opCode = getOpCode();
       int firstPosition = getPositionNumber( 1 );
 
@@ -91,20 +103,19 @@ public class Intcode {
          }
 
          next( 4 );
-         return 0;
       }
       else if ( opCode == OP_WRITE || opCode == OP_READ ) {
-         int result = 0;
-
          if ( opCode == OP_WRITE ) {
+            if ( inputs.isEmpty() ) {
+               return ExitCondition.INPUT_NEEDED;
+            }
             program.set( firstPosition, inputs.remove( 0 ) );
          }
 
          else if ( opCode == OP_READ ) {
-            result = program.get( firstPosition );
+            setOutput( program.get( firstPosition ) );
          }
          next( 2 );
-         return result;
       }
       else if ( opCode == OP_JUMP_IF_TRUE || opCode == OP_JUMP_IF_FALSE ) {
          int firstVal = getValue( firstPosition );
@@ -117,11 +128,11 @@ public class Intcode {
          else {
             next( 3 );
          }
-         return 0;
       }
       else {
          throw new RuntimeException( "invalid opCode " + opCode + " at position " + getCurrent() );
       }
+      return ExitCondition.CONTINUE;
 
    }
 
@@ -162,5 +173,17 @@ public class Intcode {
 
    public List<Integer> getProgram() {
       return program;
+   }
+
+   public void addInput( int input ){
+      inputs.add( input );
+   }
+
+   public int getOutput(){
+      return this.output;
+   }
+
+   private void setOutput( int output ){
+      this.output = output;
    }
 }
