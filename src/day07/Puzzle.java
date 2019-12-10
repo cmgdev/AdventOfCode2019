@@ -19,7 +19,7 @@ public class Puzzle extends AbstractPuzzle {
       super( IS_TEST, DAY );
    }
 
-   public static void main( String[] args ) {
+   public static void main( String... args ) {
       solve1();
       solve2();
    }
