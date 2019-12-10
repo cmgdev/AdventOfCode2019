@@ -20,7 +20,7 @@ public class Puzzle extends AbstractPuzzle {
    }
 
    public static void main( String[] args ) {
-      //      solve1();
+      solve1();
       solve2();
    }
 
