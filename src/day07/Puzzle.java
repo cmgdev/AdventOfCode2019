@@ -31,10 +31,10 @@ public class Puzzle extends AbstractPuzzle {
 
       Set<Integer[]> permutations = getPermutationsRecursive( new Integer[]{ 0, 1, 2, 3, 4 } );
 
-      int highestOutput = 0;
+      long highestOutput = 0;
       Integer[] bestPhases = null;
       for ( Integer[] permutation : permutations ) {
-         int prevOutput = 0;
+         long prevOutput = 0;
          for ( int i = 0; i < 5; i++ ) {
             Intcode amp = new Intcode( instructions );
             amp.addInput( permutation[i]  );
@@ -67,13 +67,13 @@ public class Puzzle extends AbstractPuzzle {
 
       Set<Integer[]> permutations = getPermutationsRecursive( new Integer[]{ 5, 6, 7, 8, 9 } );
 
-      int highestOutput = 0;
+      long highestOutput = 0;
       Integer[] bestPhases = null;
       for ( Integer[] permutation : permutations ) {
          List<Intcode> amps = initAmps( instructions, permutation );
 
          Intcode.ExitCondition exitCondition = Intcode.ExitCondition.CONTINUE;
-         Optional<Integer> outFromPrevAmp = Optional.empty();
+         Optional<Long> outFromPrevAmp = Optional.empty();
 
          while ( Intcode.ExitCondition.OK != exitCondition ) {
             for ( int i = 0; i < 5; i++ ) {
@@ -87,7 +87,7 @@ public class Puzzle extends AbstractPuzzle {
                outFromPrevAmp = amp.getOutput();
             }
          }
-         int prevOutput = amps.get( 4 ).getOutput().get();
+         long prevOutput = amps.get( 4 ).getOutput().get();
          if ( prevOutput > highestOutput ) {
             highestOutput = prevOutput;
             bestPhases = permutation;

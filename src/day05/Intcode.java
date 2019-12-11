@@ -8,12 +8,12 @@ import java.util.Optional;
 
 public class Intcode {
 
-   private Map<Integer, Integer> program = new HashMap<>();
-   private List<Integer> inputs = new ArrayList();
+   private Map<Long, Long> program = new HashMap<>();
+   private List<Long> inputs = new ArrayList();
 
-   private int current = 0;
-   private Optional<Integer> output = Optional.empty();
-   private int relativeBase = 0;
+   private long current = 0;
+   private Optional<Long> output = Optional.empty();
+   private long relativeBase = 0;
 
    public static final int OP_ADD = 1;
    public static final int OP_MULTIPLY = 2;
@@ -24,6 +24,10 @@ public class Intcode {
    public static final int OP_LESS_THAN = 7;
    public static final int OP_EQUALS = 8;
    public static final int OP_ADJUST_RELATIVE_BASE = 9;
+
+   public static final int PARAM_MODE_POSITION = 0;
+   public static final int PARAM_MODE_IMMEDIATE = 1;
+   public static final int PARAM_MODE_RELATIVE = 2;
 
    public enum ExitCondition {
       OK,
@@ -38,29 +42,20 @@ public class Intcode {
    private void init( String instructions ) {
       String[] s = instructions.split( "," );
       for ( int i = 0; i < s.length; i++ ) {
-         program.put( i, Integer.parseInt( s[i] ) );
+         program.put( new Long( i ), Long.parseLong( s[i] ) );
       }
    }
 
-   private int getCurrent() {
+   private long getCurrent() {
       return current;
    }
 
-   private void next( int inc ) {
+   private void next( long inc ) {
       current += inc;
    }
 
-   private void jump( int position ) {
+   private void jump( long position ) {
       current = position;
-   }
-
-   public int getPosition0() {
-      return program.get( 0 );
-   }
-
-   public ExitCondition runProgram( int input ) {
-      addInput( input );
-      return runProgram();
    }
 
    public ExitCondition runProgram() {
@@ -76,12 +71,12 @@ public class Intcode {
          return ExitCondition.OK;
       }
 
-      int opCode = getOpCode();
-      int firstPosition = getPositionNumber( 1 );
+      long opCode = getOpCode();
+      long firstPosition = getPositionNumber( 1 );
 
       if ( opCode == OP_ADD || opCode == OP_MULTIPLY || opCode == OP_LESS_THAN || opCode == OP_EQUALS ) {
-         int secondPosition = getPositionNumber( 2 );
-         int thirdPosition = getPositionNumber( 3 );
+         long secondPosition = getPositionNumber( 2 );
+         long thirdPosition = getPositionNumber( 3 );
 
          if ( opCode == OP_ADD ) {
             program.put( thirdPosition, getValue( firstPosition ) + getValue( secondPosition ) );
@@ -92,12 +87,12 @@ public class Intcode {
          }
 
          else if ( opCode == OP_LESS_THAN ) {
-            int lessThan = getValue( firstPosition ) < getValue( secondPosition ) ? 1 : 0;
+            long lessThan = getValue( firstPosition ) < getValue( secondPosition ) ? 1 : 0;
             program.put( thirdPosition, lessThan );
          }
 
          else if ( opCode == OP_EQUALS ) {
-            int equals = getValue( firstPosition ) == getValue( secondPosition ) ? 1 : 0;
+            long equals = getValue( firstPosition ) == getValue( secondPosition ) ? 1 : 0;
             program.put( thirdPosition, equals );
          }
 
@@ -112,17 +107,17 @@ public class Intcode {
          }
 
          else if ( opCode == OP_READ ) {
-            setOutput( program.get( firstPosition ) );
+            setOutput( getValue( firstPosition ) );
          }
 
          else if ( opCode == OP_ADJUST_RELATIVE_BASE ) {
-            adjustRelativeBase( program.get( firstPosition ) );
+            adjustRelativeBase( getValue( firstPosition ) );
          }
          next( 2 );
       }
       else if ( opCode == OP_JUMP_IF_TRUE || opCode == OP_JUMP_IF_FALSE ) {
-         int firstVal = getValue( firstPosition );
-         int secondPosition = getPositionNumber( 2 );
+         long firstVal = getValue( firstPosition );
+         long secondPosition = getPositionNumber( 2 );
 
          if ( (opCode == OP_JUMP_IF_TRUE && firstVal != 0) || (opCode == OP_JUMP_IF_FALSE && firstVal == 0) ) {
             jump( getValue( secondPosition ) );
@@ -139,12 +134,12 @@ public class Intcode {
 
    }
 
-   private int getOpCode() {
+   private long getOpCode() {
       return program.get( getCurrent() ) % 10;
    }
 
-   private int getParamMode( int paramNumber ) {
-      int fullInstruction = program.get( getCurrent() );
+   private long getParamMode( long paramNumber ) {
+      long fullInstruction = program.get( getCurrent() );
       if ( paramNumber >= 1 && paramNumber <= 3 ) {
          return (int) ((fullInstruction / Math.pow( 10, (paramNumber + 1) )) % 10);
       }
@@ -153,47 +148,47 @@ public class Intcode {
       }
    }
 
-   private int getPositionNumber( int paramNumber ) {
-      int paramMode = getParamMode( paramNumber );
-      if ( paramMode == 0 ) {
-         return program.get( getCurrent() + paramNumber );
+   private long getPositionNumber( long paramNumber ) {
+      long paramMode = getParamMode( paramNumber );
+      if ( paramMode == PARAM_MODE_POSITION ) {
+         return getValue( getCurrent() + paramNumber );
       }
-      else if ( paramMode == 1 ) {
+      else if ( paramMode == PARAM_MODE_IMMEDIATE ) {
          return getCurrent() + paramNumber;
       }
-      else if ( paramMode == 2 ) {
-         return getCurrent() + relativeBase;
+      else if ( paramMode == PARAM_MODE_RELATIVE ) {
+         return getValue( getCurrent() + paramNumber ) + relativeBase;
       }
       else {
          throw new RuntimeException( "invalid paramMode " + paramMode );
       }
    }
 
-   private int getValue( int positionNumber ) {
-      return program.get( positionNumber );
+   private long getValue( long positionNumber ) {
+      return program.getOrDefault( positionNumber, 0l );
    }
 
    private boolean shouldStop() {
       return program.get( getCurrent() ) == 99;
    }
 
-   public Map<Integer, Integer> getProgram() {
+   public Map<Long, Long> getProgram() {
       return program;
    }
 
-   private void adjustRelativeBase( int adjustment ) {
+   private void adjustRelativeBase( long adjustment ) {
       relativeBase += adjustment;
    }
 
-   public void addInput( int input ){
+   public void addInput( long input ){
       inputs.add( input );
    }
 
-   public Optional<Integer> getOutput(){
+   public Optional<Long> getOutput(){
       return this.output;
    }
 
-   private void setOutput( int output ){
+   private void setOutput( long output ){
       this.output = Optional.of( output );
    }
 }
