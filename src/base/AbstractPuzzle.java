@@ -19,18 +19,24 @@ public abstract class AbstractPuzzle {
    }
 
    public List<String> readFile() {
+      return readFile( true );
+   }
+
+   public List<String> readFile( boolean ignoreComments ) {
       String fileName = isTest ? "example.txt" : "input.txt";
       String dayString = day < 10 ? "0" + day : Integer.toString( day );
 
-      String inputFile = System.getProperty("user.dir") + "/out/production/AdventOfCode2019/day" + dayString + "/" + fileName;
+      String inputFile = System.getProperty( "user.dir" ) + "/out/production/AdventOfCode2019/day" + dayString + "/" + fileName;
 
       List<String> input = new ArrayList<>();
 
       try {
-         input = Files.readAllLines(new File(inputFile).toPath());
-         return input.stream().filter( i -> !i.startsWith( "#" ) && !i.isEmpty() ).collect( Collectors.toList() );
-      } catch (Exception e) {
-         System.out.println("Oh shit! " + e);
+         input = Files.readAllLines( new File( inputFile ).toPath() );
+         return input.stream().filter( i -> !i.isEmpty() && ignoreComments ? !i.startsWith( "#" ) : true )
+               .collect( Collectors.toList() );
+      }
+      catch ( Exception e ) {
+         System.out.println( "Oh shit! " + e );
       }
       return input;
    }
