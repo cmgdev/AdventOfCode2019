@@ -38,6 +38,16 @@ public class Puzzle extends AbstractPuzzle {
 
    private static void solve2() {
       System.out.println( "Solving 2..." );
+
+      Puzzle puzzle = new Puzzle();
+      String instructions = puzzle.readFile().get( 0 );
+
+      Intcode intcode = new Intcode( instructions );
+      intcode.addInput( 2 );
+      intcode.runProgram();
+      long output = intcode.getOutput().get();
+      System.out.println( "Output is " + output );
+      System.out.println( 35920 == output );
    }
 
 }
