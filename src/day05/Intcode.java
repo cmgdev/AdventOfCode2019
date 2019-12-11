@@ -1,16 +1,19 @@
 package day05;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class Intcode {
 
-   private List<Integer> program = new ArrayList();
+   private Map<Integer, Integer> program = new HashMap<>();
    private List<Integer> inputs = new ArrayList();
 
    private int current = 0;
    private Optional<Integer> output = Optional.empty();
+   private int relativeBase = 0;
 
    public static final int OP_ADD = 1;
    public static final int OP_MULTIPLY = 2;
@@ -20,6 +23,7 @@ public class Intcode {
    public static final int OP_JUMP_IF_FALSE = 6;
    public static final int OP_LESS_THAN = 7;
    public static final int OP_EQUALS = 8;
+   public static final int OP_ADJUST_RELATIVE_BASE = 9;
 
    public enum ExitCondition {
       OK,
@@ -31,16 +35,10 @@ public class Intcode {
       init( instructions );
    }
 
-   public Intcode( String instructions, int replaceFirst, int replaceSecond ) {
-      init( instructions );
-      program.set( 1, replaceFirst );
-      program.set( 2, replaceSecond );
-   }
-
    private void init( String instructions ) {
       String[] s = instructions.split( "," );
       for ( int i = 0; i < s.length; i++ ) {
-         program.add( Integer.parseInt( s[i] ) );
+         program.put( i, Integer.parseInt( s[i] ) );
       }
    }
 
@@ -86,35 +84,39 @@ public class Intcode {
          int thirdPosition = getPositionNumber( 3 );
 
          if ( opCode == OP_ADD ) {
-            program.set( thirdPosition, getValue( firstPosition ) + getValue( secondPosition ) );
+            program.put( thirdPosition, getValue( firstPosition ) + getValue( secondPosition ) );
          }
 
          else if ( opCode == OP_MULTIPLY ) {
-            program.set( thirdPosition, getValue( firstPosition ) * getValue( secondPosition ) );
+            program.put( thirdPosition, getValue( firstPosition ) * getValue( secondPosition ) );
          }
 
          else if ( opCode == OP_LESS_THAN ) {
             int lessThan = getValue( firstPosition ) < getValue( secondPosition ) ? 1 : 0;
-            program.set( thirdPosition, lessThan );
+            program.put( thirdPosition, lessThan );
          }
 
          else if ( opCode == OP_EQUALS ) {
             int equals = getValue( firstPosition ) == getValue( secondPosition ) ? 1 : 0;
-            program.set( thirdPosition, equals );
+            program.put( thirdPosition, equals );
          }
 
          next( 4 );
       }
-      else if ( opCode == OP_WRITE || opCode == OP_READ ) {
+      else if ( opCode == OP_WRITE || opCode == OP_READ || opCode == OP_ADJUST_RELATIVE_BASE ) {
          if ( opCode == OP_WRITE ) {
             if ( inputs.isEmpty() ) {
                return ExitCondition.INPUT_NEEDED;
             }
-            program.set( firstPosition, inputs.remove( 0 ) );
+            program.put( firstPosition, inputs.remove( 0 ) );
          }
 
          else if ( opCode == OP_READ ) {
             setOutput( program.get( firstPosition ) );
+         }
+
+         else if ( opCode == OP_ADJUST_RELATIVE_BASE ) {
+            adjustRelativeBase( program.get( firstPosition ) );
          }
          next( 2 );
       }
@@ -159,6 +161,9 @@ public class Intcode {
       else if ( paramMode == 1 ) {
          return getCurrent() + paramNumber;
       }
+      else if ( paramMode == 2 ) {
+         return getCurrent() + relativeBase;
+      }
       else {
          throw new RuntimeException( "invalid paramMode " + paramMode );
       }
@@ -172,8 +177,12 @@ public class Intcode {
       return program.get( getCurrent() ) == 99;
    }
 
-   public List<Integer> getProgram() {
+   public Map<Integer, Integer> getProgram() {
       return program;
+   }
+
+   private void adjustRelativeBase( int adjustment ) {
+      relativeBase += adjustment;
    }
 
    public void addInput( int input ){
