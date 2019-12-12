@@ -19,10 +19,10 @@ public abstract class AbstractPuzzle {
    }
 
    public List<String> readFile() {
-      return readFile( true );
+      return readFile( "#" );
    }
 
-   public List<String> readFile( boolean ignoreComments ) {
+   public List<String> readFile( String comment ) {
       String fileName = isTest ? "example.txt" : "input.txt";
       String dayString = day < 10 ? "0" + day : Integer.toString( day );
 
@@ -32,7 +32,7 @@ public abstract class AbstractPuzzle {
 
       try {
          input = Files.readAllLines( new File( inputFile ).toPath() );
-         return input.stream().filter( i -> !i.isEmpty() && ignoreComments ? !i.startsWith( "#" ) : true )
+         return input.stream().filter( i -> !i.isEmpty() && !i.startsWith( comment ) )
                .collect( Collectors.toList() );
       }
       catch ( Exception e ) {
