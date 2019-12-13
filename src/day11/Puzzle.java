@@ -4,9 +4,7 @@ import base.AbstractPuzzle;
 import day05.Intcode;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 public class Puzzle extends AbstractPuzzle {
 
