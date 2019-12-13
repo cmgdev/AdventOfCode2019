@@ -164,6 +164,10 @@ public class Intcode {
       }
    }
 
+   public int getNumOutputs() {
+      return outputs.size();
+   }
+
    private long getValue( long positionNumber ) {
       return program.getOrDefault( positionNumber, 0l );
    }
