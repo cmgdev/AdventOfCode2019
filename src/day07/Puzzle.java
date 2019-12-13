@@ -3,6 +3,7 @@ package day07;
 import base.AbstractPuzzle;
 import day05.Intcode;
 
+import javax.swing.text.html.Option;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -87,9 +88,8 @@ public class Puzzle extends AbstractPuzzle {
                outFromPrevAmp = amp.getOutput();
             }
          }
-         long prevOutput = amps.get( 4 ).getOutput().get();
-         if ( prevOutput > highestOutput ) {
-            highestOutput = prevOutput;
+         if ( outFromPrevAmp.isPresent() && outFromPrevAmp.get().longValue() > highestOutput ) {
+            highestOutput = outFromPrevAmp.get();
             bestPhases = permutation;
          }
       }

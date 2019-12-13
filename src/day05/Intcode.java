@@ -10,9 +10,9 @@ public class Intcode {
 
    private Map<Long, Long> program = new HashMap<>();
    private List<Long> inputs = new ArrayList();
+   private List<Long> outputs = new ArrayList<>();
 
    private long current = 0;
-   private Optional<Long> output = Optional.empty();
    private long relativeBase = 0;
 
    public static final int OP_ADD = 1;
@@ -185,10 +185,13 @@ public class Intcode {
    }
 
    public Optional<Long> getOutput(){
-      return this.output;
+      if( outputs.isEmpty()){
+         return Optional.empty();
+      }
+      return Optional.of( outputs.remove( 0 ) );
    }
 
    private void setOutput( long output ){
-      this.output = Optional.of( output );
+      outputs.add( 0, output );
    }
 }

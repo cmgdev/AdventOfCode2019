@@ -3,6 +3,9 @@ package day09;
 import base.AbstractPuzzle;
 import day05.Intcode;
 
+import javax.swing.text.html.Option;
+import java.util.Optional;
+
 public class Puzzle extends AbstractPuzzle {
 
    public static final boolean IS_TEST = false;
@@ -15,6 +18,7 @@ public class Puzzle extends AbstractPuzzle {
    public static void main( String... args ) {
       solve1();
       solve2();
+      solveQuine();
    }
 
    private static void solve1() {
@@ -50,4 +54,17 @@ public class Puzzle extends AbstractPuzzle {
       System.out.println( 35920 == output );
    }
 
+   private static void solveQuine() {
+      System.out.println( "Solving Quine" );
+
+      String instructions = "109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99";
+
+      Intcode intcode = new Intcode( instructions );
+      intcode.runProgram();
+      Optional<Long> output = intcode.getOutput();
+      while ( output.isPresent() ) {
+         System.out.println( output.get() );
+         output = intcode.getOutput();
+      }
+   }
 }
