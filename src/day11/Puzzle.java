@@ -33,9 +33,29 @@ public class Puzzle extends AbstractPuzzle {
       Puzzle puzzle = new Puzzle();
       String instructions = puzzle.readFile().get( 0 );
 
-      Intcode intcode = new Intcode( instructions );
-
       Robot robot = new Robot();
+      runRobot( robot, new Intcode( instructions ) );
+
+      System.out.println( robot.panelGrid );
+
+      long countPainted = robot.panelGrid.values().stream().map( Panel::isPainted ).filter( p -> p == true ).count();
+      System.out.println( countPainted + " " + (countPainted == 2184) );
+   }
+
+   private static void solve2() {
+      System.out.println( "Solving 2..." );
+      Puzzle puzzle = new Puzzle();
+      String instructions = puzzle.readFile().get( 0 );
+
+      Robot robot = new Robot( WHITE );
+      runRobot( robot, new Intcode( instructions ) );
+      System.out.println( robot.panelGrid );
+
+      robot.printGrid();
+      // should print AHCHZEPK
+   }
+
+   public static void runRobot( Robot robot, Intcode intcode ) {
       Intcode.ExitCondition exitCondition = Intcode.ExitCondition.CONTINUE;
       while ( exitCondition != Intcode.ExitCondition.OK ) {
          intcode.addInput( robot.getCurrentLocationColor() );
@@ -47,24 +67,20 @@ public class Puzzle extends AbstractPuzzle {
          robot.setCurrentLocationColor( paintColor );
          robot.turnAndMove( direction );
       }
-
-      System.out.println( robot.panelGrid );
-
-      long countPainted = robot.panelGrid.values().stream().map( Panel::isPainted ).filter( p -> p == true ).count();
-      System.out.println( countPainted + " " + (countPainted > 2184) );
-   }
-
-   private static void solve2() {
-      System.out.println( "Solving 2..." );
-      Puzzle puzzle = new Puzzle();
-      List<String> inputs = puzzle.readFile();
    }
 
    public static class Robot {
 
+      String separator = ",";
       Map<String, Panel> panelGrid = new HashMap<>();
-      String currentLocation = "0,0";
+      String currentLocation = 0 + separator + 0;
       char currentDirection = 'U';
+
+      public Robot( int firstPanelColor ) {
+         Panel firstPanel = new Panel();
+         firstPanel.setColor( firstPanelColor );
+         panelGrid.put( currentLocation, firstPanel );
+      }
 
       public Robot() {
          panelGrid.put( currentLocation, new Panel() );
@@ -129,7 +145,6 @@ public class Puzzle extends AbstractPuzzle {
          else if ( currentDirection == 'L' ) {
             setX( getX() - 1 );
          }
-         System.out.println( currentLocation );
       }
 
       public int getX() {
@@ -141,17 +156,48 @@ public class Puzzle extends AbstractPuzzle {
       }
 
       public void setX( int x ) {
-         currentLocation = x + "," + getY();
+         currentLocation = x + separator + getY();
       }
 
       public void setY( int y ) {
-         currentLocation = getX() + "," + y;
+         currentLocation = getX() + separator + y;
       }
 
       public String[] getXY() {
-         return currentLocation.split( "," );
+         return currentLocation.split( separator );
       }
 
+      public void printGrid() {
+         int minX = 0;
+         int maxX = 0;
+         int minY = 0;
+         int maxY = 0;
+
+         for ( String location : panelGrid.keySet() ) {
+            String[] xy = location.split( separator );
+            int x = Integer.parseInt( xy[0] );
+            int y = Integer.parseInt( xy[1] );
+
+            minX = Math.min( x, minX );
+            maxX = Math.max( x, maxX );
+            minY = Math.min( y, minY );
+            maxY = Math.max( y, maxY );
+         }
+
+         for ( int y = maxY; y >= minY; y-- ) {
+            for ( int x = minX; x <= maxX; x++ ) {
+               Panel p = panelGrid.getOrDefault( x + separator + y, new Panel() );
+               if ( p.getColor() == WHITE ) {
+                  System.out.print( WHITE );
+               }
+               else {
+                  System.out.print( " " );
+               }
+            }
+            System.out.println();
+         }
+
+      }
    }
 
    public static class Panel {

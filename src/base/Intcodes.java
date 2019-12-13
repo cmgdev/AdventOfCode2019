@@ -6,5 +6,6 @@ public class Intcodes {
       day05.Puzzle.main();
       day07.Puzzle.main();
       day09.Puzzle.main();
+      day11.Puzzle.main();
    }
 }
