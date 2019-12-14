@@ -2,7 +2,6 @@ package day12;
 
 import base.AbstractPuzzle;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -14,13 +13,14 @@ public class Puzzle extends AbstractPuzzle {
    public static final boolean IS_TEST = false;
    public static final int DAY = 12;
 
+   public static final List<String> planetNames = Arrays.asList( "Io", "Europa", "Ganymede", "Callisto" );
+
    public Puzzle() {
       super( IS_TEST, DAY );
    }
 
    public static void main( String... args ) {
-      solve1();
-      solve2();
+            solve1();
    }
 
    private static void solve1() {
@@ -28,29 +28,24 @@ public class Puzzle extends AbstractPuzzle {
       Puzzle puzzle = new Puzzle();
       List<String> inputs = puzzle.readFile();
 
-      List<Planet> planets = inputs.stream().map( s -> new Planet( s ) ).collect( Collectors.toList() );
+      List<Planet> planets = getPlanets( inputs );
+      Set<List<Planet>> planetPairs = getPairs( planets );
 
       int iterations = IS_TEST ? 100 : 1000;
       for ( int i = 0; i < iterations; i++ ) {
-         applyGravity( planets );
+         applyGravity( planetPairs );
          applyVelocity( planets );
       }
 
       planets.forEach( p -> System.out.println( p ) );
 
-      int totalEnergy = planets.stream().mapToInt( Planet::getEnergy ).sum();
-      int expected = IS_TEST ? 1940 : 12644;
+      long totalEnergy = planets.stream().mapToLong( Planet::getEnergy ).sum();
+      long expected = IS_TEST ? 1940 : 12644;
       System.out.println( "Total energy = " + totalEnergy );
       System.out.println( expected == totalEnergy );
    }
 
-   private static void solve2() {
-      System.out.println( "Solving 2..." );
-   }
-
-   public static void applyGravity( List<Planet> planets ) {
-      Set<List<Planet>> planetPairs = getPairs( planets );
-
+   public static void applyGravity( Set<List<Planet>> planetPairs ) {
       for ( List<Planet> pair : planetPairs ) {
          Planet a = pair.get( 0 );
          Planet b = pair.get( 1 );
@@ -60,7 +55,7 @@ public class Puzzle extends AbstractPuzzle {
             a.velX--;
             b.velX++;
          }
-         if ( a.posX < b.posX ) {
+         else if ( a.posX < b.posX ) {
             a.velX++;
             b.velX--;
          }
@@ -70,7 +65,7 @@ public class Puzzle extends AbstractPuzzle {
             a.velY--;
             b.velY++;
          }
-         if ( a.posY < b.posY ) {
+         else if ( a.posY < b.posY ) {
             a.velY++;
             b.velY--;
          }
@@ -80,7 +75,7 @@ public class Puzzle extends AbstractPuzzle {
             a.velZ--;
             b.velZ++;
          }
-         if ( a.posZ < b.posZ ) {
+         else if ( a.posZ < b.posZ ) {
             a.velZ++;
             b.velZ--;
          }
@@ -96,26 +91,37 @@ public class Puzzle extends AbstractPuzzle {
       }
    }
 
+   private static List<Planet> getPlanets( List<String> inputs ) {
+      List<Planet> planets = inputs.stream().map( s -> new Planet( s ) ).collect( Collectors.toList() );
+
+      for ( int i = 0; i < planets.size(); i++ ) {
+         Planet p = planets.get( i );
+         p.name = planetNames.get( i );
+      }
+
+      return planets;
+   }
+
    private static Set<List<Planet>> getPairs( List<Planet> planets ) {
+      Planet a = planets.get( 0 );
+      Planet b = planets.get( 1 );
+      Planet c = planets.get( 2 );
+      Planet d = planets.get( 3 );
+
       Set<List<Planet>> planetPairs = new HashSet<>();
-      if ( planets.isEmpty() ) {
-         return planetPairs;
-      }
-
-      List<Planet> planetList = new ArrayList<>( planets );
-
-      while ( planetList.size() > 1 ) {
-         Planet first = planetList.remove( 0 );
-         for ( Planet other : planetList ) {
-            planetPairs.add( Arrays.asList( first, other ) );
-         }
-      }
+      planetPairs.add( Arrays.asList( a, b ) );
+      planetPairs.add( Arrays.asList( a, c ) );
+      planetPairs.add( Arrays.asList( a, d ) );
+      planetPairs.add( Arrays.asList( b, c ) );
+      planetPairs.add( Arrays.asList( b, d ) );
+      planetPairs.add( Arrays.asList( c, d ) );
 
       return planetPairs;
    }
 
-   private static class Planet {
+   private static class Planet implements Comparable<Planet> {
 
+      String name;
       int posX;
       int posY;
       int posZ;
@@ -130,15 +136,22 @@ public class Puzzle extends AbstractPuzzle {
          posZ = Integer.parseInt( tokens[2].split( "=" )[1].replaceAll( ">", "" ) );
       }
 
-      public int getEnergy() {
-         int potential = Math.abs( posX ) + Math.abs( posY ) + Math.abs( posZ );
-         int kinetic = Math.abs( velX ) + Math.abs( velY ) + Math.abs( velZ );
-         return potential * kinetic;
+      public long getEnergy() {
+         return getPotentialEnergy() * getKineticEnergy();
+      }
+
+      public long getKineticEnergy() {
+         return Math.abs( velX ) + Math.abs( velY ) + Math.abs( velZ );
+      }
+
+      public long getPotentialEnergy() {
+         return Math.abs( posX ) + Math.abs( posY ) + Math.abs( posZ );
       }
 
       @Override
       public String toString() {
-         return "pos=<x=" + posX + ",\ty=" + posY + ",\tz=" + posZ + ">,\tvel=<x=" + velX + ",\ty=" + velY + ",\tz=" + velZ + ">";
+         return name + "=pos=<x=" + posX + ",\ty=" + posY + ",\tz=" + posZ + ">,\tvel=<x=" + velX + ",\ty=" + velY + ",\tz="
+               + velZ + ">";
       }
 
       @Override
@@ -165,6 +178,11 @@ public class Puzzle extends AbstractPuzzle {
          result = 31 * result + velY;
          result = 31 * result + velZ;
          return result;
+      }
+
+      @Override
+      public int compareTo( Planet o ) {
+         return this.name.compareTo( o.name );
       }
    }
 }
