@@ -54,6 +54,7 @@ public class Puzzle extends AbstractPuzzle {
         System.out.println("Solving 1...");
         Puzzle puzzle = new Puzzle();
         String instructions = puzzle.readFile().get(0);
+        long expected = puzzle.getAnswer1();
 
         Intcode arcade = new Intcode(instructions);
         arcade.runProgram();
@@ -72,7 +73,7 @@ public class Puzzle extends AbstractPuzzle {
             output = arcade.getOutput();
         }
         System.out.println("Block tile count is " + blockTileCount);
-        System.out.println(427 == blockTileCount);
+        System.out.println(427 == expected);
     }
 
     public static void solve2() {
@@ -80,15 +81,17 @@ public class Puzzle extends AbstractPuzzle {
 
         Puzzle puzzle = new Puzzle();
         String instructions = puzzle.readFile().get(0);
+        long expected = puzzle.getAnswer2();
 
         Intcode arcade = new Intcode(instructions);
         arcade.replace(0, 2); // put in a quarter
 
-
-        playGame(arcade);
+        int finalScore = playGame(arcade);
+        System.out.println( "Final score " + finalScore);
+        System.out.println(finalScore == expected);
     }
 
-    private static void playGame(Intcode arcade) {
+    private static int playGame(Intcode arcade) {
         int score = 0, minX = 100, maxX = 0, minY = 100, maxY = 0, ballX = 0, paddleX = 0;
         String scoreIndicator = -1 + SEP + 0;
 
@@ -142,8 +145,7 @@ public class Puzzle extends AbstractPuzzle {
 
             arcade.addInput(ballX - paddleX);
         }
-        System.out.println( "Final score " + score);
-        System.out.println(score == 21426);
+        return score;
     }
 
 }
