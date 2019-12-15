@@ -46,6 +46,10 @@ public class Intcode {
       }
    }
 
+   public void replace( long index, long replacement ){
+      program.replace(index, replacement);
+   }
+
    private long getCurrent() {
       return current;
    }
