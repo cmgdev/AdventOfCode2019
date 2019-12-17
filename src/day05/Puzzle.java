@@ -1,6 +1,7 @@
 package day05;
 
 import base.AbstractPuzzle;
+import base.model.Intcode;
 
 import java.util.List;
 
