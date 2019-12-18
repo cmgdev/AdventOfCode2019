@@ -30,3 +30,4 @@
 1 VJHF, 6 MNCFX => 4 RFSQX
 176 ORE => 6 VJHF
 answer1:180697
+answer2:5586022
