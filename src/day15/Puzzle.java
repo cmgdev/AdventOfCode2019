@@ -8,8 +8,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.OptionalInt;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 public class Puzzle extends AbstractPuzzle {
 
@@ -42,21 +42,6 @@ public class Puzzle extends AbstractPuzzle {
          return null;
       }
 
-      public Direction getOppositeDirection() {
-         if ( this.equals( Direction.NORTH ) ) {
-            return Direction.SOUTH;
-         }
-         if ( this.equals( Direction.SOUTH ) ) {
-            return Direction.NORTH;
-         }
-         if ( this.equals( Direction.EAST ) ) {
-            return Direction.WEST;
-         }
-         if ( this.equals( Direction.WEST ) ) {
-            return Direction.EAST;
-         }
-         return null;
-      }
    }
 
    enum Status {
@@ -89,11 +74,11 @@ public class Puzzle extends AbstractPuzzle {
    }
 
    public static void main( String... args ) {
-      solve1();
-      solve2();
+      Map<Point, Status> pointsToOxygenSystem = solve1();
+      solve2( pointsToOxygenSystem );
    }
 
-   private static void solve1() {
+   private static Map<Point, Status> solve1() {
       System.out.println( "Solving 1..." );
 
       Puzzle puzzle = new Puzzle();
@@ -138,28 +123,20 @@ public class Puzzle extends AbstractPuzzle {
             System.out.println();
          }
          System.out.println( "Still haven't visited " + numUnknown );
-         //         sleep();
       }
-
-      // 1065 too high, 66 wrong, 314 too low, 315 wrong
 
       int shortestDistance = getShortestDistanceToOxygenSystem( pointsToOxygenSystem );
       System.out.println( "Shortest distance is " + shortestDistance );
       long expected = puzzle.getAnswer1();
       System.out.println( expected == shortestDistance );
-   }
 
+      return pointsToOxygenSystem;
+   }
 
    private static int getShortestDistanceToOxygenSystem( Map<Point, Status> points ) {
       Map<Point, Point> pointsToParents = breadthFirstSearch( points );
 
-      Point oxygen = null;
-      for ( Map.Entry<Point, Status> entry : points.entrySet() ) {
-         if ( Status.OXYGEN.equals( entry.getValue() ) ) {
-            oxygen = entry.getKey();
-            break;
-         }
-      }
+      Point oxygen = getPointWithOxygen( points );
 
       int length = 0;
 
@@ -173,6 +150,17 @@ public class Puzzle extends AbstractPuzzle {
       return length;
    }
 
+   private static Point getPointWithOxygen( Map<Point, Status> points ) {
+      Point oxygen = null;
+      for ( Map.Entry<Point, Status> entry : points.entrySet() ) {
+         if ( Status.OXYGEN.equals( entry.getValue() ) ) {
+            oxygen = entry.getKey();
+            break;
+         }
+      }
+      return oxygen;
+   }
+
    private static Map<Point, Point> breadthFirstSearch( Map<Point, Status> points ) {
       Map<Point, Point> pointsToParents = new HashMap<>();
 
@@ -181,8 +169,7 @@ public class Puzzle extends AbstractPuzzle {
 
       while ( !queue.isEmpty() ) {
          Point next = queue.remove( queue.size() - 1 );
-         for ( Direction direction : Direction.values() ) {
-            Point p = new Point( next.getX() + direction.relativeX, next.getY() + direction.relativeY );
+         for ( Point p : getAdjacentPoints( next ) ) {
             Status s = points.get( p );
             if ( (Status.OK.equals( s ) || Status.OXYGEN.equals( s )) && !pointsToParents.containsKey( p ) ) {
                pointsToParents.put( p, next );
@@ -192,15 +179,6 @@ public class Puzzle extends AbstractPuzzle {
       }
 
       return pointsToParents;
-   }
-
-   private static void sleep() {
-      try {
-         Thread.sleep( 500 );
-      }
-      catch ( InterruptedException e ) {
-         e.printStackTrace();
-      }
    }
 
    private static Map<Point, Status> findOxygenSystem( Intcode intcode ) {
@@ -218,7 +196,7 @@ public class Puzzle extends AbstractPuzzle {
          Direction nextDirection = unexplored.isEmpty() ?
                Direction.getById( random.nextInt( Direction.values().length ) + 1 ) :
                unexplored.get( random.nextInt( unexplored.size() ) );
-         Point nextPoint = new Point( current.getX() + nextDirection.relativeX, current.getY() + nextDirection.relativeY );
+         Point nextPoint = getAdjacentPoint( current, nextDirection );
 
          intcode.addInput( nextDirection.id );
          intcode.runProgram();
@@ -234,36 +212,73 @@ public class Puzzle extends AbstractPuzzle {
       return points;
    }
 
+   private static List<Point> getAdjacentPoints( Point point ) {
+      List<Point> adjacentPoints = new ArrayList<>();
+
+      for ( Direction direction : Direction.values() ) {
+         adjacentPoints.add( getAdjacentPoint( point, direction ) );
+      }
+      return adjacentPoints;
+   }
+
+   private static Point getAdjacentPoint( Point point, Direction direction ) {
+      return new Point( point.getX() + direction.relativeX, point.getY() + direction.relativeY );
+   }
+
    private static List<Direction> getSurroundingUnexploredDirections( Map<Point, Status> exploredPoints, Point current ) {
       List<Direction> unexploredDirections = new ArrayList<>();
 
       for ( Direction direction : Direction.values() ) {
-         if ( !exploredPoints
-               .containsKey( new Point( current.getX() + direction.relativeX, current.getY() + direction.relativeY ) ) ) {
+         if ( !exploredPoints.containsKey( getAdjacentPoint( current, direction ) ) ) {
             unexploredDirections.add( direction );
          }
       }
       return unexploredDirections;
    }
 
-   private static List<Direction> getSurroundingOpenDirections( Map<Point, Status> exploredPoints, Point current,
-         Direction lastDirection ) {
-      List<Direction> openDirections = new ArrayList<>();
+   private static void solve2( Map<Point, Status> pointsToOxygenSystem ) {
+      System.out.println( "Solving 2..." );
 
-      for ( Direction direction : Direction.values() ) {
-         if ( lastDirection != null && direction == lastDirection.getOppositeDirection() ) {
-            continue;
+      int numMinutes = 0;
+
+      int numOpenPoints = countOpenPoints( pointsToOxygenSystem );
+      while ( numOpenPoints > 0 ) {
+
+         List<Point> pointsWithOxygen = getPointsWithOxygen( pointsToOxygenSystem );
+         List<Point> getOxygenThisMinute = new ArrayList<>();
+
+         for ( Point pointWithOxygen : pointsWithOxygen ) {
+            for ( Point adjacent : getAdjacentPoints( pointWithOxygen ) ) {
+               if ( Status.OK.equals( pointsToOxygenSystem.get( adjacent ) ) ) {
+                  getOxygenThisMinute.add( adjacent );
+               }
+            }
          }
-         if ( Status.OK.equals(
-               exploredPoints.get( new Point( current.getX() + direction.relativeX, current.getY() + direction.relativeY ) ) ) ) {
-            openDirections.add( direction );
+         for ( Point addOxygen : getOxygenThisMinute ) {
+            pointsToOxygenSystem.put( addOxygen, Status.OXYGEN );
          }
+         System.out.println( "Add oxygen to " + getOxygenThisMinute.size() );
+         numMinutes++;
+         numOpenPoints = countOpenPoints( pointsToOxygenSystem );
       }
-      return openDirections;
+
+      System.out.println( "Took " + numMinutes );
+
+      Puzzle puzzle = new Puzzle();
+      puzzle.readFile();
+      long expected = puzzle.getAnswer2();
+
+      System.out.println( expected == numMinutes );
+
    }
 
-   private static void solve2() {
-      System.out.println( "Solving 2..." );
+   private static int countOpenPoints( Map<Point, Status> points ) {
+      return (int) points.values().stream().filter( s -> Status.OK.equals( s ) ).count();
+   }
+
+   private static List<Point> getPointsWithOxygen( Map<Point, Status> points ) {
+      return points.entrySet().stream().filter( e -> Status.OXYGEN.equals( e.getValue() ) ).map( Map.Entry::getKey )
+            .collect( Collectors.toList() );
    }
 
 
