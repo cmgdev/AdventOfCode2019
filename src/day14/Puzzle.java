@@ -35,7 +35,6 @@ public class Puzzle extends AbstractPuzzle {
 
 //        System.out.println(reactions);
 
-        int oreUsed = 0;
         Reaction fuelReaction = reactions.get(FUEL);
 
         Map<String, Integer> onHand = new HashMap<>();
@@ -64,36 +63,6 @@ public class Puzzle extends AbstractPuzzle {
             }
         }
         return ore;
-    }
-
-    public static Optional<Reaction> getRunnableReaction(Map<String, Integer> onHand, Collection<Reaction> reactions) {
-        return reactions.stream().sorted((a, b) -> a.timesRun > b.timesRun ? 1 : -1).filter(r -> enoughOnHand(onHand, r.input)).findFirst();
-    }
-
-    private static void sleep() {
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static boolean enoughOnHand(Map<String, Integer> onHand, Collection<Substance> needs) {
-        for (Substance need : needs) {
-            if (!enoughOnHand(onHand, need)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    public static boolean enoughOnHand(Map<String, Integer> onHand, Substance need) {
-        for (Map.Entry<String, Integer> s : onHand.entrySet()) {
-            if (s.getKey().equals(need.name) && s.getValue() >= need.quantity) {
-                return true;
-            }
-        }
-        return false;
     }
 
     public static void solve2() {
@@ -135,7 +104,6 @@ public class Puzzle extends AbstractPuzzle {
     public static class Reaction {
         Substance output;
         List<Substance> input = new ArrayList<>();
-        int timesRun = 0;
 
         public Reaction(String description) {
             String[] inAndOut = description.split("=>");
@@ -155,55 +123,4 @@ public class Puzzle extends AbstractPuzzle {
         }
     }
 
-    //       Map<String, Integer> needs = new HashMap<>();
-    //        needs.put(fuelReaction.output.name, fuelReaction.output.quantity);
-    //
-    //        Map<String, Integer> onHand = new HashMap<>();
-    //
-    //        while (!onHand.containsKey(fuelReaction.output.name)) {
-    //            System.out.println("On hand now " + onHand);
-    //            Optional<Reaction> runnableReaction = getRunnableReaction(onHand, reactions.values());
-    //            if (runnableReaction.isPresent()) {
-    //                Reaction r = runnableReaction.get();
-    //                System.out.println("Can run reaction " + r);
-    //                for( Substance in : r.input){
-    //                    int existingQuantity = onHand.get(in.name);
-    //                    onHand.put(in.name, existingQuantity - in.quantity);
-    //                    if( in.name.equals("ORE") ){
-    //                        oreUsed += in.quantity;
-    //                        System.out.println("Ore used " + oreUsed);
-    //                    }
-    //                }
-    //                onHand.put(r.output.name, r.output.quantity);
-    //                r.timesRun++;
-    //            }
-    //
-    //            int oreNeeded = needs.getOrDefault("ORE", 0);
-    //            System.out.println("Ore Needed this cycle " + oreNeeded);
-    //            if (oreNeeded > 0) {
-    //                onHand.put("ORE", oreNeeded);
-    //            }
-    //
-    //
-    //            Map<String, Integer> needsToAdd = new HashMap<>();
-    //            for (String need : needs.keySet()) {
-    //                Reaction match = reactions.get(need);
-    //                if (match != null) {
-    //                    for (Substance input : match.input) {
-    //                        int inMap = needsToAdd.getOrDefault(input.name, 0);
-    //                        needsToAdd.put(input.name, inMap + input.quantity);
-    //                    }
-    //                }
-    //            }
-    //
-    //            for (String need : needsToAdd.keySet()) {
-    //                if (!onHand.containsKey(need) && !needs.containsKey(need)) {
-    //                    needs.put(need, needsToAdd.get(need));
-    //                }
-    //            }
-    //            System.out.println("Needs: " + needs);
-    //
-    //            sleep();
-    //
-    //        }
 }
