@@ -39,14 +39,14 @@ public abstract class AbstractPuzzle {
             input = Files.readAllLines(new File(inputFile).toPath());
             input = input.stream().filter(i -> !i.isEmpty() && !i.startsWith(comment))
                     .collect(Collectors.toList());
-            setAnswers(input);
+            input = setAnswers(input);
         } catch (Exception e) {
             System.out.println("Oh shit! " + e);
         }
         return input;
     }
 
-    private void setAnswers(List<String> inputs) {
+    private List<String> setAnswers(List<String> inputs) {
         for (int i = 0; i < inputs.size(); i++) {
             String s = inputs.get(i);
             if (s.startsWith("answer1:")) {
@@ -55,7 +55,7 @@ public abstract class AbstractPuzzle {
                 answer2 = Long.valueOf(s.split("answer2:")[1]);
             }
         }
-        inputs = inputs.stream().filter( i -> !i.startsWith("answer")).collect(Collectors.toList());
+        return inputs.stream().filter( i -> !i.startsWith("answer")).collect(Collectors.toList());
     }
 
     public long getAnswer1() {
