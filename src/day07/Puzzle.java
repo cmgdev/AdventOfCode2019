@@ -1,7 +1,7 @@
 package day07;
 
 import base.AbstractPuzzle;
-import day05.Intcode;
+import base.model.Intcode;
 
 import java.util.ArrayList;
 import java.util.Arrays;

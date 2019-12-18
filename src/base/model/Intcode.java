@@ -1,4 +1,4 @@
-package day05;
+package base.model;
 
 import java.util.ArrayList;
 import java.util.HashMap;

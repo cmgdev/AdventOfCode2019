@@ -1,7 +1,7 @@
 package day11;
 
 import base.AbstractPuzzle;
-import day05.Intcode;
+import base.model.Intcode;
 
 import java.util.HashMap;
 import java.util.Map;
