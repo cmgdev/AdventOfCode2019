@@ -15,8 +15,8 @@ public abstract class AbstractPuzzle {
 
     private boolean isTest;
     private int day;
-    private long answer1;
-    private long answer2;
+    private String answer1;
+    private String answer2;
 
     public AbstractPuzzle(boolean isTest, int day) {
         this.isTest = isTest;
@@ -50,19 +50,27 @@ public abstract class AbstractPuzzle {
         for (int i = 0; i < inputs.size(); i++) {
             String s = inputs.get(i);
             if (s.startsWith("answer1:")) {
-                answer1 = Long.valueOf(s.split("answer1:")[1]);
+                answer1 = s.split("answer1:")[1].trim();
             } else if (s.startsWith("answer2:")) {
-                answer2 = Long.valueOf(s.split("answer2:")[1]);
+                answer2 = s.split("answer2:")[1].trim();
             }
         }
-        return inputs.stream().filter( i -> !i.startsWith("answer")).collect(Collectors.toList());
+        return inputs.stream().filter(i -> !i.startsWith("answer")).collect(Collectors.toList());
     }
 
     public long getAnswer1() {
-        return answer1;
+        return Long.valueOf(answer1);
     }
 
     public long getAnswer2() {
+        return Long.valueOf(answer2);
+    }
+
+    public String getAnswer1String() {
+        return answer1;
+    }
+
+    public String getAnswer2String() {
         return answer2;
     }
 }
