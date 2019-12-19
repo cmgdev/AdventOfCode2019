@@ -7,11 +7,13 @@ import java.util.stream.Collectors;
 
 public class Puzzle extends AbstractPuzzle {
 
-    public static final boolean IS_TEST = true;
+    public static final boolean IS_TEST = false;
     public static final int DAY = 14;
 
     public static final String FUEL = "FUEL";
     public static final String ORE = "ORE";
+
+    public static final long ONE_TRILLION = 1000000000000L;
 
     public Puzzle() {
         super(IS_TEST, DAY);
@@ -51,9 +53,8 @@ public class Puzzle extends AbstractPuzzle {
         for (Substance s : reaction.input) {
             if (s.name.equals(ORE)) {
                 ore += s.quantity * factor;
-            }
-            else{
-                ore += getOreNeeded( s.name, s.quantity * factor, reactions, onHand);
+            } else {
+                ore += getOreNeeded(s.name, s.quantity * factor, reactions, onHand);
             }
         }
         return ore;
@@ -67,28 +68,35 @@ public class Puzzle extends AbstractPuzzle {
 
         Reaction fuelReaction = reactions.get(FUEL);
 
-        long oreInInventory = 1000000000000L;
+        long oreInInventory = ONE_TRILLION;
         long fuelProduced = 0;
         boolean keepRunning = true;
 
         Map<String, Long> onHand = new HashMap<>();
 
-        while( keepRunning ) {
+        while (keepRunning) {
             long oreNeeded = getOreNeeded(fuelReaction.output.name, fuelReaction.output.quantity, reactions, onHand);
 
-            if( oreInInventory >= oreNeeded ){
+            if (oreInInventory >= oreNeeded) {
                 oreInInventory -= oreNeeded;
                 fuelProduced++;
-                System.out.println( "Fuel produced: " + fuelProduced + ", ore in inventory: " + oreInInventory );
-            }
-            else{
+                System.out.println("Fuel produced: " + fuelProduced + ", ore in inventory: " + oreInInventory);
+
+                boolean allZeros = onHand.values().stream().allMatch(l -> l == 0L);
+                if (allZeros) {
+                    long oreUsed = ONE_TRILLION - oreInInventory;
+                    long totalCycles = ONE_TRILLION / oreUsed;
+                    fuelProduced = ( fuelProduced * totalCycles );
+                    oreInInventory = ONE_TRILLION - (oreUsed * totalCycles );
+                }
+            } else {
                 keepRunning = false;
             }
         }
         long expected = puzzle.getAnswer2();
+
         System.out.println("Fuel Produced: " + fuelProduced);
         System.out.println(expected == fuelProduced);
-
     }
 
     private static Map<String, Reaction> getReactions(List<String> instructions) {
