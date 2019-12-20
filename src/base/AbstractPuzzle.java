@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 public abstract class AbstractPuzzle {
     public static final String ALPHABET_UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     public static final String ALPHABET_LOWER = ALPHABET_UPPER.toLowerCase();
+    public static final int ASCII_OFFSET = 48;
 
     private boolean isTest;
     private int day;
