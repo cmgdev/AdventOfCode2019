@@ -8,7 +8,7 @@ import java.util.List;
 
 public class Puzzle extends AbstractPuzzle {
 
-    public static final boolean IS_TEST = true;
+    public static final boolean IS_TEST = false;
     public static final int DAY = 16;
 
     public static final int[] basePattern = new int[]{ 0, 1, 0, -1 };
@@ -18,9 +18,8 @@ public class Puzzle extends AbstractPuzzle {
     }
 
     public static void main(String... args) {
-        solve1();
+                solve1();
                 solve2();
-        //                        compareMethods();
     }
 
     public static void solve1() {
@@ -28,7 +27,10 @@ public class Puzzle extends AbstractPuzzle {
 
         Puzzle puzzle = new Puzzle();
         String input = puzzle.readFile().get(0);
-        String result = runPhases( input, 100, 1 );
+        //        System.out.println( input );
+
+        String result = runPhases( input, 100 );
+        //        System.out.println( result );
 
         String expected = puzzle.getAnswer1String();
         result = result.substring(0, 8);
@@ -37,24 +39,24 @@ public class Puzzle extends AbstractPuzzle {
         System.out.println(result.equals(expected));
     }
 
-    private static String runPhases( String input, int numPhases, int duplicateInput ) {
+    private static String runPhases( String input, int numPhases ) {
         String result = input;
 
         for ( int i = 0; i < numPhases; i++ ) {
-            result = runPhase( result.toCharArray(), duplicateInput );
+            result = runPhase( result.toCharArray() );
         }
         return result;
     }
 
-    private static String runPhase( char[] chars, int duplicateInput ) {
+    private static String runPhase( char[] chars ) {
 
         int[] ints = new int[chars.length];
         for ( int i = 0; i < chars.length; i++ ) {
-            ints[i] = Integer.parseInt( String.valueOf( chars[i] ) );
+            ints[i] = chars[i] - 48;
         }
 
         StringBuilder sb = new StringBuilder();
-        for ( int i = 0; i < ints.length * duplicateInput; i++ ) {
+        for ( int i = 0; i < ints.length; i++ ) {
 
             long sum = 0;
             for ( int j = i; j < ints.length; j++ ) {
@@ -74,29 +76,47 @@ public class Puzzle extends AbstractPuzzle {
 
         Puzzle puzzle = new Puzzle();
         String input = puzzle.readFile().get( 0 );
+        int offset = Integer.parseInt( input.substring( 0, 7 ) );
+//        System.out.println( offset );
+        input = dupeInput( input, 10000 );
 
-        String result = runPhases( input, 100, 2 );
-        System.out.println( result );
+        for ( int i = 0; i < 100; i++ ) {
+            input = solve2( input );
+        }
+//        System.out.println( input );
+        String actual = input.substring( offset, offset + 8 );
+        System.out.println( actual );
+        System.out.println( actual.equals( puzzle.getAnswer2String() ) );
+
+    }
+
+    private static String solve2( String input ) {
+        StringBuffer b = new StringBuffer();
+
+        int[] ints = new int[input.length()];
+        for ( int i = 0; i < ints.length; i++ ) {
+            ints[i] = input.charAt( i ) - 48;
+        }
+
+        int sum = 0;
+        for ( int i = 0; i < ints.length; i++ ) {
+            sum += ints[ints.length - i - 1];
+            b.append( sum % 10 );
+        }
+        return b.reverse().toString();
+    }
+
+    public static String dupeInput( String input, int dupes ) {
+        StringBuilder sb = new StringBuilder();
+        for ( int i = 0; i < dupes; i++ ) {
+            sb.append( input );
+        }
+        return sb.toString();
     }
 
     public static int getMultiplier( int element, int step ) {
         int idx = (int) ((element) / ((double) step));
-        int val = basePattern[idx % 4];
-        return val;
-    }
-
-    public static List<Integer> getPatternForElement(int element) {
-        List<Integer> pattern = new ArrayList<>();
-
-        for ( int i = 0; i < basePattern.length; i++ ) {
-            for (int j = 0; j < element; j++) {
-                pattern.add( basePattern[i] );
-            }
-        }
-
-        pattern.remove(0);
-        pattern.add(pattern.size(), 0);
-        return pattern;
+        return basePattern[idx % 4];
     }
 
 }
