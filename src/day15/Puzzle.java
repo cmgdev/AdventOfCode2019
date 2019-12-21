@@ -1,6 +1,7 @@
 package day15;
 
 import base.AbstractPuzzle;
+import base.model.Direction;
 import base.model.Intcode;
 import base.model.Point;
 
@@ -17,32 +18,8 @@ public class Puzzle extends AbstractPuzzle {
    public static final int DAY = 15;
    public static final Point startingPoint = new Point( 0, 0 );
 
-   enum Direction {
-      NORTH( 1, 0, 1 ),
-      SOUTH( 2, 0, -1 ),
-      WEST( 3, -1, 0 ),
-      EAST( 4, 1, 0 );
-
-      int id;
-      int relativeX;
-      int relativeY;
-
-      Direction( int id, int relativeX, int relativeY ) {
-         this.id = id;
-         this.relativeX = relativeX;
-         this.relativeY = relativeY;
-      }
-
-      public static Direction getById( int id ) {
-         for ( Direction direction : Direction.values() ) {
-            if ( direction.id == id ) {
-               return direction;
-            }
-         }
-         return null;
-      }
-
-   }
+   public static final Direction[] directions = new Direction[]{ Direction.NORTH, Direction.SOUTH, Direction.WEST,
+         Direction.EAST };
 
    enum Status {
       WALL( 0, false, '#' ),
@@ -94,33 +71,23 @@ public class Puzzle extends AbstractPuzzle {
          Intcode intcode = new Intcode( instructions );
          pointsToOxygenSystem.putAll( findOxygenSystem( intcode ) );
 
-         int minX = 0, maxX = 0, minY = 0, maxY = 0;
-         for ( Point p : pointsToOxygenSystem.keySet() ) {
-            minX = Math.min( minX, p.getX() );
-            maxX = Math.max( maxX, p.getX() );
-            minY = Math.min( minY, p.getY() );
-            maxY = Math.max( maxY, p.getY() );
-         }
-
-         for ( int y = maxY; y >= minY; y-- ) {
-            for ( int x = minX; x < maxX; x++ ) {
-               char print = '?';
-               if ( x == 0 && y == 0 ) {
-                  print = 'S';
-               }
-               else {
-                  Status s = pointsToOxygenSystem.get( new Point( x, y ) );
-                  if ( s != null ) {
-                     print = s.character;
-                  }
-                  else {
-                     numUnknownThisRound++;
-                  }
-               }
-
-               System.out.print( print );
+         String pointMapToString = Point.pointMapToString( pointsToOxygenSystem, ( point, status ) -> {
+            String print = "?";
+            if ( point.getX() == 0 && point.getY() == 0 ) {
+               print = "S";
             }
-            System.out.println();
+            else if ( status != null ) {
+               print = String.valueOf( status.character );
+            }
+            return print;
+         } );
+
+         System.out.println( pointMapToString );
+
+         for ( char c : pointMapToString.toCharArray() ) {
+            if ( c == '?' ) {
+               numUnknownThisRound++;
+            }
          }
          System.out.println( "Still haven't visited " + numUnknown );
       }
@@ -169,7 +136,7 @@ public class Puzzle extends AbstractPuzzle {
 
       while ( !queue.isEmpty() ) {
          Point next = queue.remove( queue.size() - 1 );
-         for ( Point p : getAdjacentPoints( next ) ) {
+         for ( Point p : next.getAdjacentPoints() ) {
             Status s = points.get( p );
             if ( (Status.OK.equals( s ) || Status.OXYGEN.equals( s )) && !pointsToParents.containsKey( p ) ) {
                pointsToParents.put( p, next );
@@ -193,12 +160,11 @@ public class Puzzle extends AbstractPuzzle {
          List<Direction> unexplored = getSurroundingUnexploredDirections( points, current );
 
          // pick a random direction
-         Direction nextDirection = unexplored.isEmpty() ?
-               Direction.getById( random.nextInt( Direction.values().length ) + 1 ) :
+         Direction nextDirection = unexplored.isEmpty() ? getDirectionById( random.nextInt( Direction.values().length ) + 1 ) :
                unexplored.get( random.nextInt( unexplored.size() ) );
-         Point nextPoint = getAdjacentPoint( current, nextDirection );
+         Point nextPoint = current.getAdjacentPoint( nextDirection );
 
-         intcode.addInput( nextDirection.id );
+         intcode.addInput( getDirectionId( nextDirection ) );
          intcode.runProgram();
          status = Status.getStatusById( intcode.getOutput().get().intValue() );
 
@@ -212,24 +178,13 @@ public class Puzzle extends AbstractPuzzle {
       return points;
    }
 
-   private static List<Point> getAdjacentPoints( Point point ) {
-      List<Point> adjacentPoints = new ArrayList<>();
 
-      for ( Direction direction : Direction.values() ) {
-         adjacentPoints.add( getAdjacentPoint( point, direction ) );
-      }
-      return adjacentPoints;
-   }
-
-   private static Point getAdjacentPoint( Point point, Direction direction ) {
-      return new Point( point.getX() + direction.relativeX, point.getY() + direction.relativeY );
-   }
 
    private static List<Direction> getSurroundingUnexploredDirections( Map<Point, Status> exploredPoints, Point current ) {
       List<Direction> unexploredDirections = new ArrayList<>();
 
       for ( Direction direction : Direction.values() ) {
-         if ( !exploredPoints.containsKey( getAdjacentPoint( current, direction ) ) ) {
+         if ( !exploredPoints.containsKey( current.getAdjacentPoint( direction ) ) ) {
             unexploredDirections.add( direction );
          }
       }
@@ -248,7 +203,7 @@ public class Puzzle extends AbstractPuzzle {
          List<Point> getOxygenThisMinute = new ArrayList<>();
 
          for ( Point pointWithOxygen : pointsWithOxygen ) {
-            for ( Point adjacent : getAdjacentPoints( pointWithOxygen ) ) {
+            for ( Point adjacent : pointWithOxygen.getAdjacentPoints() ) {
                if ( Status.OK.equals( pointsToOxygenSystem.get( adjacent ) ) ) {
                   getOxygenThisMinute.add( adjacent );
                }
@@ -279,6 +234,19 @@ public class Puzzle extends AbstractPuzzle {
    private static List<Point> getPointsWithOxygen( Map<Point, Status> points ) {
       return points.entrySet().stream().filter( e -> Status.OXYGEN.equals( e.getValue() ) ).map( Map.Entry::getKey )
             .collect( Collectors.toList() );
+   }
+
+   public static Direction getDirectionById( int id ) {
+      return directions[id - 1];
+   }
+
+   public static int getDirectionId( Direction direction ) {
+      for ( int i = 0; i < directions.length; i++ ) {
+         if ( directions[i].equals( direction ) ) {
+            return i + 1;
+         }
+      }
+      return -1;
    }
 
 
