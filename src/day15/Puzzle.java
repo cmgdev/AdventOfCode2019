@@ -72,14 +72,13 @@ public class Puzzle extends AbstractPuzzle {
          pointsToOxygenSystem.putAll( findOxygenSystem( intcode ) );
 
          String pointMapToString = Point.pointMapToString( pointsToOxygenSystem, ( point, status ) -> {
-            String print = "?";
             if ( point.getX() == 0 && point.getY() == 0 ) {
-               print = "S";
+               return "S";
             }
             else if ( status != null ) {
-               print = String.valueOf( status.character );
+               return String.valueOf( status.character );
             }
-            return print;
+            return "?";
          } );
 
          System.out.println( pointMapToString );
@@ -101,16 +100,15 @@ public class Puzzle extends AbstractPuzzle {
    }
 
    private static int getShortestDistanceToOxygenSystem( Map<Point, Status> points ) {
-      Map<Point, Point> pointsToParents = breadthFirstSearch( points );
+      Point.breadthFirstSearch( points, startingPoint,
+            ( point, status ) -> (Status.OK.equals( status ) || Status.OXYGEN.equals( status )) );
 
-      Point oxygen = getPointWithOxygen( points );
+      int length = -1;
 
-      int length = 0;
-
-      Point current = oxygen;
-      while ( !current.equals( startingPoint ) ) {
+      Point current = getPointWithOxygen( points );
+      while ( current != null ) {
 //         System.out.println( current );
-         current = pointsToParents.get( current );
+         current = current.getParent();
          length++;
       }
 
@@ -118,14 +116,21 @@ public class Puzzle extends AbstractPuzzle {
    }
 
    private static Point getPointWithOxygen( Map<Point, Status> points ) {
-      Point oxygen = null;
       for ( Map.Entry<Point, Status> entry : points.entrySet() ) {
          if ( Status.OXYGEN.equals( entry.getValue() ) ) {
-            oxygen = entry.getKey();
-            break;
+            return entry.getKey();
          }
       }
-      return oxygen;
+      return null;
+   }
+
+   private static Point getStartingPoint( Map<Point, Status> points ) {
+      for ( Map.Entry<Point, Status> entry : points.entrySet() ) {
+         if ( entry.getKey().getX() == 0 && entry.getKey().getY() == 0 ) {
+            return entry.getKey();
+         }
+      }
+      return null;
    }
 
    private static Map<Point, Point> breadthFirstSearch( Map<Point, Status> points ) {
@@ -178,8 +183,6 @@ public class Puzzle extends AbstractPuzzle {
       return points;
    }
 
-
-
    private static List<Direction> getSurroundingUnexploredDirections( Map<Point, Status> exploredPoints, Point current ) {
       List<Direction> unexploredDirections = new ArrayList<>();
 
@@ -212,7 +215,7 @@ public class Puzzle extends AbstractPuzzle {
          for ( Point addOxygen : getOxygenThisMinute ) {
             pointsToOxygenSystem.put( addOxygen, Status.OXYGEN );
          }
-         System.out.println( "Add oxygen to " + getOxygenThisMinute.size() );
+//         System.out.println( "Add oxygen to " + getOxygenThisMinute.size() );
          numMinutes++;
          numOpenPoints = countOpenPoints( pointsToOxygenSystem );
       }

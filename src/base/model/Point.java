@@ -1,17 +1,19 @@
 package base.model;
 
-import day17.Puzzle;
-
+import javax.swing.text.html.Option;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
 public class Point {
 
    int x;
    int y;
+   Point parent;
+   List<Point> children = new ArrayList<>();
 
    public Point( int x, int y ) {
       this.x = x;
@@ -32,6 +34,18 @@ public class Point {
 
    public int getX() {
       return x;
+   }
+
+   public void setParent( Point parent ) {
+      this.parent = parent;
+   }
+
+   public Point getParent() {
+      return parent;
+   }
+
+   public List<Point> getChildren() {
+      return children;
    }
 
    @Override
@@ -70,8 +84,8 @@ public class Point {
       for ( int y = maxY; y >= minY; y-- ) {
          for ( int x = minX; x <= maxX; x++ ) {
             Point current = new Point( x, y );
-            T o = pointMap.get( current );
-            sb.append( toStringFunction.apply( current, o ) );
+            T t = pointMap.get( current );
+            sb.append( toStringFunction.apply( current, t ) );
          }
 
          sb.append( "\n" );
@@ -89,6 +103,32 @@ public class Point {
 
    public Point getAdjacentPoint( Direction direction ) {
       return new Point( this.getX() + direction.getRelativeX(), this.getY() + direction.getRelativeY() );
+   }
+
+   public static <T> void breadthFirstSearch( Map<Point, T> points, Point startingPoint,
+         BiFunction<Point, T, Boolean> isParentFunction ) {
+
+      List<Point> seen = new ArrayList<>();
+      List<Point> queue = new ArrayList<>();
+      queue.add( startingPoint );
+
+      while ( !queue.isEmpty() ) {
+         Point next = queue.remove( queue.size() - 1 );
+         for ( Point p : next.getAdjacentPoints() ) {
+            Point finalP = p;
+            Optional<Point> fromMap = points.keySet().stream().filter( k -> k.equals( finalP ) ).findFirst();
+            if ( fromMap.isPresent() ) {
+               p = fromMap.get();
+               next.children.add( p );
+               T t = points.get( p );
+               if ( isParentFunction.apply( p, t ) && !seen.contains( p ) ) {
+                  p.setParent( next );
+                  queue.add( p );
+                  seen.add( next );
+               }
+            }
+         }
+      }
    }
 
 }
